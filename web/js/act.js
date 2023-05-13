@@ -26,6 +26,10 @@ function init() {
   //showNotes();
   window.setInterval(updateAct,50);
 
+  // TODO fix the flicker of a refresh
+  // May have to update all, rather than clear and replace
+  //window.setInterval(getNotes,5000);
+
   getNotes();
 }
 
@@ -43,17 +47,66 @@ function getNotes() {
   });
 }
 
+function deleteNote(note) {
+
+  if(window.confirm("Are you sure you want to delete the note: '"+note.note+"'")) {
+    $.ajax({
+      method: "DELETE",
+      url: "/acts/"+note["act_id"]+"/notes/"+note["id"],
+      dataType: "json",
+      contentType: "application/json",
+      success: function(note) {
+        getNotes();
+      },
+    });
+  }
+}
+
+
+let repeatId = undefined;
+let currentRepeatSectionId = undefined;
 
 function showNotes() {
   entries = data.sort(function(a,b){return a.startTime-b.startTime});
   $("#act-info").empty();
   for (i in entries) {
     entry = entries[i];
-    $noteEntry = $("<div class='note' note-id='"+entry.id+"'>"+formatTime(entry.startTime) + " - " + entry.note+"</div>");
+    $noteEntry = $("<div class='note' note-id='"+entry.id+"'>"+formatTime(entry.startTime) + " - " + entry.note+" </div>");
     $noteEntry.attr("id", "note-"+entry.id);
     $noteEntry.click(handleNoteClick);
+
+    $delete = $("<button>Delete</button>");
+    $delete.click((function(note){
+      return function(event) {event.stopPropagation();deleteNote(note);};
+    })(entry));
+
+    $repeat = $("<button>Repeat</button>");
+    $repeat.click(repeatClickClosure(entry));
+
     $("#act-info").append($noteEntry);
+    $noteEntry.append($repeat);
+    $noteEntry.append($delete);
   }
+}
+
+function repeatClickClosure(note) {
+  return function(event) {
+    $(".repeat-active").removeClass("repeat-active");
+    window.clearInterval(repeatId);
+    if (currentRepeatSectionId == note.id) {
+      event.stopPropagation();
+      currentRepeatSectionId = undefined;
+      //$("[note-id="+entry.id+"]");
+    } else { 
+      event.stopPropagation();
+      document.getElementById("audio-player").play();
+      let length = Math.round((note.endTime - note.startTime)*1000);
+      currentRepeatSectionId = note.id;
+      repeatId = window.setInterval(function(){moveAudioLocation(note.startTime)}, length);
+      $(event.target).addClass("repeat-active");
+      moveAudioLocation(note.startTime);
+    }
+  };
 }
 
 function handleNoteClick(event) {

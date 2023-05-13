@@ -157,6 +157,13 @@ def update_note(act_id, id):
     old_note.update(new_note)
 
     return json.dumps(notes)
+@app.route("/acts/<int:act_id>/notes/<int:id>", methods=["DELETE"])
+def delete_note(act_id, id):
+    note = list(filter(lambda x: x["id"] == id and x["act_id"] == act_id, notes))[0]
+
+    notes.remove(note)
+
+    return json.dumps(note)
 
 
 @app.route("/")
