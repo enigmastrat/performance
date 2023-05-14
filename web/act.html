@@ -7,9 +7,18 @@
   <script language='javascript' src='js/act.js'></script>
 </head>
 <body>
-  <audio controls id='audio-player' style='width:100%;''>
-    <source src='HolySound.mp3' type='audio/mpeg'/>
+  <audio controls id='audio-player' style='width:100%;'>
+    <source type='audio/mpeg'/>
   </audio>
+  <form id="file-form">
+    <label for="file">File</label>
+    <input id="file" name="file" type="file" />
+    <button id="file-upload-button">Upload</button>
+  </form>
+  <div id="audio-waveform">
+    <img id="audio-waveform-img" width="100%"/>
+    <div id="audio-position-line"></div>
+  </div>
   <div id='tag-box'>
     <input id='tag-note'>
     <input id='tag-save' type='button' value="Add Note">

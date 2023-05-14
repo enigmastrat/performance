@@ -1,10 +1,17 @@
 import json
+import os
 from flask import Flask, request, send_from_directory
+from werkzeug.utils import secure_filename
 
+from audio_waveform import generate_waveform
 
+UPLOAD_FOLDER = os.path.join('web','songs')
+UPLOAD_FOLDER_RELATIVE = 'songs'
+ALLOWED_EXTENSIONS = {'mp3'}
 app = Flask(__name__,
             static_url_path="",
             static_folder="web",)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 dancers = [
     {"id": 0, "name": "Charlotte"},
@@ -164,6 +171,30 @@ def delete_note(act_id, id):
     notes.remove(note)
 
     return json.dumps(note)
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+@app.route("/acts/<int:id>/file", methods=["POST"])
+def upload_audio_file(id):
+    act = list(filter(lambda x: x["id"] == id, acts))[0]
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+        print(file.filename)
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+
+        # Process file # This seems convoluted... must be a better way
+        waveform_img_filename = filename.removesuffix("."+filename.split(".")[-1]) + ".png"
+        waveform_img_path = os.path.join(app.config['UPLOAD_FOLDER'], waveform_img_filename)
+        generate_waveform(file_path, output_file_name=waveform_img_path)
+        # Add file to act
+        act["file"] = os.path.join(UPLOAD_FOLDER_RELATIVE, filename)
+        act["waveform"] = os.path.join(UPLOAD_FOLDER_RELATIVE, waveform_img_filename)
+    
+    return json.dumps(act)
 
 
 @app.route("/")

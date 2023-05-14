@@ -22,15 +22,39 @@ let actId = 2;
 
 function init() {
   $("#tag-save").click(saveTag);
+  $("#audio-waveform").click(setAudioPosition);
+  $("#file-upload-button").click(uploadFile);
 
   //showNotes();
   window.setInterval(updateAct,50);
+  window.requestAnimationFrame(updateAudioLocation);
 
   // TODO fix the flicker of a refresh
   // May have to update all, rather than clear and replace
   //window.setInterval(getNotes,5000);
 
+  getActs();
+  getAct();
   getNotes();
+}
+
+function getActs() {
+  // TODO get the acts
+}
+
+function getAct() {
+  $.get({
+    url: "/acts/"+actId,
+    dataType: "json",
+    contentType: "application/json",
+    success: showAct
+  });
+}
+
+function showAct(act) {
+  $("#audio-player > source").attr("src", act["file"]);
+  $("#audio-waveform-img").attr("src", act["waveform"]);
+  document.getElementById("audio-player").load();
 }
 
 
@@ -71,7 +95,8 @@ function showNotes() {
   $("#act-info").empty();
   for (i in entries) {
     entry = entries[i];
-    $noteEntry = $("<div class='note' note-id='"+entry.id+"'>"+formatTime(entry.startTime) + " - " + entry.note+" </div>");
+
+    $noteEntry = $("<div class='note' note-id='"+entry.id+"'>"+formatTime(entry.startTime) + " - " + formatTime(entry.endTime) + " - " + entry.note+" </div>");
     $noteEntry.attr("id", "note-"+entry.id);
     $noteEntry.click(handleNoteClick);
 
@@ -99,6 +124,8 @@ function repeatClickClosure(note) {
       //$("[note-id="+entry.id+"]");
     } else { 
       event.stopPropagation();
+      // Kind of a hack. If it isn't already playing, this is going to still "repeat".
+      // TODO need a better repeat mechanism that only fires when playing.
       document.getElementById("audio-player").play();
       let length = Math.round((note.endTime - note.startTime)*1000);
       currentRepeatSectionId = note.id;
@@ -173,4 +200,39 @@ function saveTag() {
   });
 
   //showNotes();
+}
+
+
+function updateAudioLocation() {
+  let currentTime = document.getElementById("audio-player").currentTime;
+  let duration = document.getElementById("audio-player").duration;
+  let percent = currentTime/duration;
+  let width = $("#audio-waveform").width();
+  let position = width*percent;
+
+  $("#audio-position-line").css("width", position+"px");
+  window.requestAnimationFrame(updateAudioLocation);
+}
+
+function setAudioPosition(event) {
+  let xPosition = event.offsetX;
+  let width = $("#audio-waveform").width();
+  let percent = xPosition/width;
+  let duration = document.getElementById("audio-player").duration;
+  let position = duration*percent;
+
+  moveAudioLocation(position);
+}
+
+
+function uploadFile(event) {
+  event.preventDefault();
+  $.ajax({
+    url: "/acts/"+actId+"/file", 
+    type: 'POST',
+    data: new FormData($('#file-form')[0]), // The form with the file inputs.
+    processData: false,
+    contentType: false,                    // Using FormData, no need to process data.
+    success: getAct
+  })
 }
