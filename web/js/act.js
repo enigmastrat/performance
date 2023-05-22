@@ -18,7 +18,12 @@ let data = [];
   {id:5, startTime: 26, endTime: 35, note: "Verse 1"},
 ];*/
 
-let actId = 2;
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const actId = urlParams.get('id')
+
+//let actId = 2;
 
 function init() {
   $("#tag-save").click(saveTag);
@@ -52,6 +57,7 @@ function getAct() {
 }
 
 function showAct(act) {
+  $("#act-name").text(act["name"]);
   $("#audio-player > source").attr("src", act["file"]);
   $("#audio-waveform-img").attr("src", act["waveform"]);
   document.getElementById("audio-player").load();
@@ -122,7 +128,7 @@ function repeatClickClosure(note) {
       event.stopPropagation();
       currentRepeatSectionId = undefined;
       //$("[note-id="+entry.id+"]");
-    } else { 
+    } else {
       event.stopPropagation();
       // Kind of a hack. If it isn't already playing, this is going to still "repeat".
       // TODO need a better repeat mechanism that only fires when playing.
@@ -140,7 +146,7 @@ function handleNoteClick(event) {
   let target = event.target;
   let $target = $(target);
   let entry = data.filter(function (item){return item.id == $target.attr("note-id")})[0];
-  
+
   moveAudioLocation(entry.startTime);
 }
 
@@ -189,7 +195,7 @@ function saveTag() {
     note:note
   };
 
-  
+
   $.ajax({
     method: "POST",
     url: "/acts/"+actId+"/notes",
@@ -228,7 +234,7 @@ function setAudioPosition(event) {
 function uploadFile(event) {
   event.preventDefault();
   $.ajax({
-    url: "/acts/"+actId+"/file", 
+    url: "/acts/"+actId+"/file",
     type: 'POST',
     data: new FormData($('#file-form')[0]), // The form with the file inputs.
     processData: false,

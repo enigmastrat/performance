@@ -1,6 +1,8 @@
 import json
 import os
-from flask import Flask, request, send_from_directory
+import hashlib
+
+from flask import Flask, request, send_from_directory, session
 from werkzeug.utils import secure_filename
 
 from audio_waveform import generate_waveform
@@ -11,6 +13,7 @@ ALLOWED_EXTENSIONS = {'mp3'}
 app = Flask(__name__,
             static_url_path="",
             static_folder="web",)
+app.secret_key = "This is a super secret random secret key"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 dancers = [
@@ -24,9 +27,9 @@ groups = [
 ]
 
 acts = [
-    {"id": 0, "name": "Like a Prayer", "participants": {"groups":[1], "individuals":[0]}},
-    {"id": 1, "name": "Steppin Time", "participants": {"groups":[0], "individuals":[]}},
-    {"id": 2, "name": "Holy Sound", "file": "HolySound.mp3", "participants": {}},
+    {"id": 0, "name": "Like a Prayer", "owner_id": 1, "participants": {"groups":[1], "individuals":[0]}},
+    {"id": 1, "name": "Steppin Time", "owner_id": 0, "participants": {"groups":[0], "individuals":[]}},
+    {"id": 2, "name": "Holy Sound", "file": "HolySound.mp3", "owner_id": 0, "participants": {}},
 ]
 
 notes = [
@@ -44,6 +47,36 @@ organization = {
     "members": dancers,
 }
 
+users = [
+    {
+        "id": 0,
+        "email": "test@test.test",
+        "password": "secret"
+    },{
+        "id": 1,
+        "email": "a",
+        "password": "a"
+    },
+]
+
+# TODO make this stronger
+def is_logged_in():
+    return "user_email" in session and session["user_email"] is not None
+
+@app.route("/login", methods=["POST"])
+def login():
+
+    user = request.json
+    password = user["password"]
+    email = user["email"]
+
+    filtered_users = list(filter(lambda x: x["email"] == email and x["password"] == password, users))
+    if (len(filtered_users) > 0):
+        # TODO not sure if flask sessions are secure
+        session["user_id"] = list(filtered_users)[0]["id"]
+        session["user_email"] = email
+        return ("Success", 200)
+    return ("Login denied", 403)
 
 @app.route("/organization", methods=["GET"])
 def get_organization():
@@ -109,9 +142,19 @@ def update_group(id):
 
 @app.route("/acts", methods=["GET"])
 def get_acts():
-    return json.dumps(acts)
+    if not is_logged_in():
+        redirect("/login.html", code=403)
+
+    user_id = session["user_id"]
+
+    return json.dumps(list(filter(lambda x: x["owner_id"] == user_id, acts)))
 @app.route("/acts", methods=["POST"])
 def add_acts():
+    if not is_logged_in():
+        redirect("/login.html", code=403)
+
+    user_id = session["user_id"]
+
     act = request.json
     act["id"] = (acts[-1]["id"]+1) if len(acts) > 0 else 0
     acts.append(act)
@@ -193,13 +236,16 @@ def upload_audio_file(id):
         # Add file to act
         act["file"] = os.path.join(UPLOAD_FOLDER_RELATIVE, filename)
         act["waveform"] = os.path.join(UPLOAD_FOLDER_RELATIVE, waveform_img_filename)
-    
+
     return json.dumps(act)
 
 
 @app.route("/")
 def root():
-    return app.send_static_file("index.html")
+    if is_logged_in():
+        return app.send_static_file("index.html")
+    else:
+        return app.send_static_file("login.html")
 
 @app.route("/js/<path:path>")
 def send_js(path):
