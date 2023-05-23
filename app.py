@@ -157,9 +157,10 @@ def add_acts():
 
     act = request.json
     act["id"] = (acts[-1]["id"]+1) if len(acts) > 0 else 0
+    act["owner_id"] = user_id
     acts.append(act)
 
-    return json.dumps(acts)
+    return json.dumps(act)
 @app.route("/acts/<int:id>", methods=["GET"])
 def get_act(id):
     act = list(filter(lambda x: x["id"] == id, acts))[0]
@@ -176,7 +177,12 @@ def update_act(id):
     old_act.update(new_act)
 
     return json.dumps(acts)
-
+@app.route("/acts/<int:id>", methods=["DELETE"])
+def delete_act(id):
+    act = list(filter(lambda x: x["id"] == id, acts))[0]
+    acts.remove(act)
+    #TODO delete everything associated with the act (Notes and files)
+    return json.dumps(act)
 # Notes
 @app.route("/acts/<int:id>/notes", methods=["GET"])
 def get_notes(id):

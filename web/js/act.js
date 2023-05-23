@@ -29,6 +29,7 @@ function init() {
   $("#tag-save").click(saveTag);
   $("#audio-waveform").click(setAudioPosition);
   $("#file-upload-button").click(uploadFile);
+  $("#act-name").blur(updateActName);
 
   //showNotes();
   window.setInterval(updateAct,50);
@@ -57,12 +58,37 @@ function getAct() {
 }
 
 function showAct(act) {
-  $("#act-name").text(act["name"]);
+  $("#act-name").val(act["name"]);
   $("#audio-player > source").attr("src", act["file"]);
   $("#audio-waveform-img").attr("src", act["waveform"]);
   document.getElementById("audio-player").load();
 }
 
+function updateActName() {
+  let act = {
+    id: actId,
+    name: $("#act-name").val()
+  }
+
+  $.ajax({
+    method: "POST",
+    url: "/acts/"+actId,
+    data: JSON.stringify(act),
+    dataType: "json",
+    contentType: "application/json",
+    success: successfulNameUpdate
+  });
+}
+
+function successfulNameUpdate(data) {
+  initActs(); // This is from home.js... I don't like that
+  flashName();
+}
+
+function flashName() {
+  $("#act-name").addClass("success");
+  window.setTimeout(function(){$("#act-name").removeClass("success");},2000);
+}
 
 function getNotes() {
   // TODO replace with selections
