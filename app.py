@@ -238,10 +238,13 @@ def upload_audio_file(id):
         print(file.filename)
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+
         file.save(file_path)
 
         # Process file # This seems convoluted... must be a better way
-        waveform_img_filename = filename.removesuffix("."+filename.split(".")[-1]) + ".png"
+        waveform_img_filename = ".".join(filename.split(".")[:-1]) + ".png"
         waveform_img_path = os.path.join(app.config['UPLOAD_FOLDER'], waveform_img_filename)
         generate_waveform(file_path, output_file_name=waveform_img_path)
         # Add file to act

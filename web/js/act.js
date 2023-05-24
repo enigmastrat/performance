@@ -148,14 +148,18 @@ function showNotes() {
   }
 }
 
+function clearRepeat() {
+  $(".repeat-active").removeClass("repeat-active").removeClass("btn-warning").addClass("btn-secondary");
+  window.clearInterval(repeatId);
+  currentRepeatSectionId = undefined;
+}
+
 function repeatClickClosure(note) {
   return function(event) {
-    $(".repeat-active").removeClass("repeat-active").removeClass("btn-warning").addClass("btn-secondary");
-    window.clearInterval(repeatId);
-    if (currentRepeatSectionId == note.id) {
+    tmpRepeatSectionId = currentRepeatSectionId;
+    clearRepeat();
+    if (tmpRepeatSectionId == note.id) {
       event.stopPropagation();
-      currentRepeatSectionId = undefined;
-      //$("[note-id="+entry.id+"]");
     } else {
       event.stopPropagation();
       // Kind of a hack. If it isn't already playing, this is going to still "repeat".
@@ -170,12 +174,27 @@ function repeatClickClosure(note) {
   };
 }
 
+let selectedNote = undefined;
+
 function handleNoteClick(event) {
   let target = event.target;
   let $target = $(target);
   let entry = data.filter(function (item){return item.id == $target.attr("note-id")})[0];
-
+  selectedNote = entry;
   moveAudioLocation(entry.startTime);
+  highlightSelection();
+  clearRepeat();
+}
+
+function highlightSelection() {
+  if (!selectedNote){return;}
+
+  let duration = document.getElementById("audio-player").duration;
+  let left = selectedNote.startTime/duration*100;
+  let blockDuration = (selectedNote.endTime-selectedNote.startTime)/duration*100;
+
+  $("#audio-selection").css("left",left+"%");
+  $("#audio-selection").css("width",blockDuration+"%");
 }
 
 function moveAudioLocation(time) {
@@ -249,7 +268,7 @@ function updateAudioLocation() {
 }
 
 function setAudioPosition(event) {
-  let xPosition = event.offsetX;
+  let xPosition = event.pageX;
   let width = $("#audio-waveform").width();
   let percent = xPosition/width;
   let duration = document.getElementById("audio-player").duration;

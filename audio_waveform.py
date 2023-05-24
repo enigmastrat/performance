@@ -1,9 +1,18 @@
-import librosa
+
+try:
+    import librosa
+except ModuleNotFoundError:
+    print("librosa not installed, won't be able to generate waveforms")
+    librosa = None
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def generate_waveform(file_path, output_file_name="testplot.png"):
+    if librosa is None:
+        return
+
     file = librosa.load(file_path, sr=750)
     audio = file[0]
     sample_rate = file[1]
