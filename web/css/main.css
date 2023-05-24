@@ -43,16 +43,21 @@
     height: 100%;
     background: rgba(0,150,0,.5);
 
-    z-index:2;
+    z-index:20;
 }
-#audio-selection-left {
+#audio-selection-left, #audio-selection-right {
   top:0px;
-  left:0px;
   position: absolute;
   width:3px;
   height: 100%;
   background: rgba(0,50,0,.5);
   cursor: ew-resize;
+}
+#audio-selection-left {
+  left:0px;
+}
+#audio-selection-right {
+  right:0px;
 }
 
 .success {
