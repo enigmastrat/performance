@@ -27,14 +27,22 @@
 }
 #audio-position-line {
   position: absolute;
-  width: 2px;
+  width: 7px;
   height: 100%;
-  background: rgba(0,0,0,.1);
+  background: rgba(0,0,0,1);
+  border-left: 3px solid rgba(200,200,200,1);
+  border-right: 3px solid rgba(200,200,200,1);
   top: 0px;
-  z-index:0;
+  z-index:2;
+  opacity: .4;
 }
 
 .success {
   box-shadow: inset 0 0 5px 5px #AFA;
   transition: all 500 ease-in-out;
+}
+
+.delete-act {
+  text-decoration: none;
+  margin-left: 1em;
 }

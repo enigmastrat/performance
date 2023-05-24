@@ -1,8 +1,9 @@
 import json
 import os
 import hashlib
+import uuid
 
-from flask import Flask, request, send_from_directory, session
+from flask import Flask, request, send_from_directory, session, redirect
 from werkzeug.utils import secure_filename
 
 from audio_waveform import generate_waveform
@@ -26,20 +27,24 @@ groups = [
     {"id":1, "name": "Encore", "members": [1]},
 ]
 
+act_0_id = str(uuid.uuid4())
+act_1_id = str(uuid.uuid4())
+act_2_id = str(uuid.uuid4())
+
 acts = [
-    {"id": 0, "name": "Like a Prayer", "owner_id": 1, "participants": {"groups":[1], "individuals":[0]}},
-    {"id": 1, "name": "Steppin Time", "owner_id": 0, "participants": {"groups":[0], "individuals":[]}},
-    {"id": 2, "name": "Holy Sound", "file": "HolySound.mp3", "owner_id": 0, "participants": {}},
+    {"id": act_0_id, "name": "Like a Prayer", "owner_id": 1, "participants": {"groups":[1], "individuals":[0]}},
+    {"id": act_1_id, "name": "Steppin Time", "owner_id": 0, "participants": {"groups":[0], "individuals":[]}},
+    {"id": act_2_id, "name": "Holy Sound", "file": "HolySound.mp3", "waveform": "HolySound.png", "owner_id": 0, "participants": {}},
 ]
 
 notes = [
-    {"id":0, "act_id": 2, "startTime": 0, "endTime": 10, "note": "Song starts"},
-    {"id":1, "act_id": 2, "startTime": 4, "endTime": 10, "note": "Guitar and Drums Start playing"},
-    {"id":2, "act_id": 2, "startTime": 7, "endTime": 15, "note": "Lead line"},
-    {"id":3, "act_id": 2, "startTime": 13, "endTime": 21, "note": "Lead line #2"},
-    {"id":4, "act_id": 2, "startTime": 18.2, "endTime": 25, "note": "Lead line #3"},
-    {"id":5, "act_id": 2, "startTime": 26, "endTime": 35, "note": "Verse 1"},
-    {"id":6, "act_id": 2, "startTime": 72, "endTime": 82, "note": "Verse 2"},
+    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 0, "endTime": 10, "note": "Song starts"},
+    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 4, "endTime": 10, "note": "Guitar and Drums Start playing"},
+    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 7, "endTime": 15, "note": "Lead line"},
+    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 13, "endTime": 21, "note": "Lead line #2"},
+    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 18.2, "endTime": 25, "note": "Lead line #3"},
+    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 26, "endTime": 35, "note": "Verse 1"},
+    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 72, "endTime": 82, "note": "Verse 2"},
 ]
 
 organization = {
@@ -93,12 +98,12 @@ def add_dancer():
 
     return json.dumps(dancers)
 
-@app.route("/dancers/<int:id>", methods=["GET"])
+@app.route("/dancers/<id>", methods=["GET"])
 def get_dancer(id):
     dancer = list(filter(lambda x: x["id"] == id, dancers))[0]
     return json.dumps(dancer)
 
-@app.route("/dancers/<int:id>", methods=["PUT","POST"])
+@app.route("/dancers/<id>", methods=["PUT","POST"])
 def update_dancer(id):
     old_dancer = list(filter(lambda x: x["id"] == id, dancers))[0]
     new_dancer = request.json
@@ -122,11 +127,11 @@ def add_groups():
     groups.append(group)
 
     return json.dumps(groups)
-@app.route("/groups/<int:id>", methods=["GET"])
+@app.route("/groups/<id>", methods=["GET"])
 def get_group(id):
     group = list(filter(lambda x: x["id"] == id, groups))[0]
     return json.dumps(group)
-@app.route("/groups/<int:id>", methods=["PUT","POST"])
+@app.route("/groups/<id>", methods=["PUT","POST"])
 def update_group(id):
     old_group = list(filter(lambda x: x["id"] == id, groups))[0]
     new_group = request.json
@@ -156,16 +161,16 @@ def add_acts():
     user_id = session["user_id"]
 
     act = request.json
-    act["id"] = (acts[-1]["id"]+1) if len(acts) > 0 else 0
+    act["id"] = str(uuid.uuid4())
     act["owner_id"] = user_id
     acts.append(act)
 
     return json.dumps(act)
-@app.route("/acts/<int:id>", methods=["GET"])
+@app.route("/acts/<id>", methods=["GET"])
 def get_act(id):
     act = list(filter(lambda x: x["id"] == id, acts))[0]
     return json.dumps(act)
-@app.route("/acts/<int:id>", methods=["PUT","POST"])
+@app.route("/acts/<id>", methods=["PUT","POST"])
 def update_act(id):
     old_act = list(filter(lambda x: x["id"] == id, acts))[0]
     new_act = request.json
@@ -177,30 +182,30 @@ def update_act(id):
     old_act.update(new_act)
 
     return json.dumps(acts)
-@app.route("/acts/<int:id>", methods=["DELETE"])
+@app.route("/acts/<id>", methods=["DELETE"])
 def delete_act(id):
     act = list(filter(lambda x: x["id"] == id, acts))[0]
     acts.remove(act)
     #TODO delete everything associated with the act (Notes and files)
     return json.dumps(act)
 # Notes
-@app.route("/acts/<int:id>/notes", methods=["GET"])
+@app.route("/acts/<id>/notes", methods=["GET"])
 def get_notes(id):
     filtered_notes = list(filter(lambda x: x["act_id"] == id, notes))
     return json.dumps(filtered_notes)
-@app.route("/acts/<int:act_id>/notes", methods=["POST"])
+@app.route("/acts/<act_id>/notes", methods=["POST"])
 def add_note(act_id):
     note = request.json
-    note["id"] = (notes[-1]["id"]+1) if len(notes) > 0 else 0
+    note["id"] = str(uuid.uuid4())
     note["act_id"] = act_id
     notes.append(note)
 
     return json.dumps(acts)
-@app.route("/acts/<int:act_id>/notes/<int:id>", methods=["GET"])
+@app.route("/acts/<act_id>/notes/<id>", methods=["GET"])
 def get_note(act_id, id):
     note = list(filter(lambda x: x["id"] == id and x["act_id"] == act_id, notes))[0]
     return json.dumps(note)
-@app.route("/acts/<int:act_id>/notes/<int:id>", methods=["PUT","POST"])
+@app.route("/acts/<act_id>/notes/<id>", methods=["PUT","POST"])
 def update_note(act_id, id):
     old_note = list(filter(lambda x: x["id"] == id and x["act_id"] == act_id, notes))[0]
     new_note = request.json
@@ -213,7 +218,7 @@ def update_note(act_id, id):
     old_note.update(new_note)
 
     return json.dumps(notes)
-@app.route("/acts/<int:act_id>/notes/<int:id>", methods=["DELETE"])
+@app.route("/acts/<act_id>/notes/<id>", methods=["DELETE"])
 def delete_note(act_id, id):
     note = list(filter(lambda x: x["id"] == id and x["act_id"] == act_id, notes))[0]
 
@@ -225,7 +230,7 @@ def delete_note(act_id, id):
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-@app.route("/acts/<int:id>/file", methods=["POST"])
+@app.route("/acts/<id>/file", methods=["POST"])
 def upload_audio_file(id):
     act = list(filter(lambda x: x["id"] == id, acts))[0]
     file = request.files['file']

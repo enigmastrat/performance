@@ -3,7 +3,6 @@ TODOs
 - Make it so comments stay visible (maybe show previous, current, and next)
 - Allow adding audio/video comments
 - Add persistence and file associations
-- Add audio upload
 */
 
 
@@ -132,23 +131,26 @@ function showNotes() {
     $noteEntry.attr("id", "note-"+entry.id);
     $noteEntry.click(handleNoteClick);
 
-    $delete = $("<button>Delete</button>");
+    $delete = $("<button class='btn btn-danger'>Delete &#x232B;</button>");
     $delete.click((function(note){
       return function(event) {event.stopPropagation();deleteNote(note);};
     })(entry));
 
-    $repeat = $("<button>Repeat</button>");
+    $repeat = $("<button class='btn btn-secondary'>&#x1d106; Repeat &#x1d107;</button>");
     $repeat.click(repeatClickClosure(entry));
 
+    $btnGroup = $("<div class='btn-group' role='group'>");
+    $btnGroup.append($delete);
+    $btnGroup.append($repeat);
+
     $("#act-info").append($noteEntry);
-    $noteEntry.append($repeat);
-    $noteEntry.append($delete);
+    $noteEntry.prepend($btnGroup);
   }
 }
 
 function repeatClickClosure(note) {
   return function(event) {
-    $(".repeat-active").removeClass("repeat-active");
+    $(".repeat-active").removeClass("repeat-active").removeClass("btn-warning").addClass("btn-secondary");
     window.clearInterval(repeatId);
     if (currentRepeatSectionId == note.id) {
       event.stopPropagation();
@@ -162,7 +164,7 @@ function repeatClickClosure(note) {
       let length = Math.round((note.endTime - note.startTime)*1000);
       currentRepeatSectionId = note.id;
       repeatId = window.setInterval(function(){moveAudioLocation(note.startTime)}, length);
-      $(event.target).addClass("repeat-active");
+      $(event.target).addClass("repeat-active").addClass("btn-warning").removeClass("btn-secondary");
       moveAudioLocation(note.startTime);
     }
   };
@@ -241,8 +243,8 @@ function updateAudioLocation() {
   let percent = currentTime/duration;
   let width = $("#audio-waveform").width();
   let position = width*percent;
-
-  $("#audio-position-line").css("width", position+"px");
+  position = (Math.round(position*10)/10)-3.5;
+  $("#audio-position-line").css("left", position+"px");
   window.requestAnimationFrame(updateAudioLocation);
 }
 

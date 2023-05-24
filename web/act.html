@@ -63,8 +63,10 @@
     <div id="audio-position-line"></div>
   </div>
   <div id='tag-box'>
-    <input id='tag-note'>
-    <input id='tag-save' type='button' value="Add Note">
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" id='tag-note' placeholder="Note" aria-describedby="button-note">
+      <button class="btn btn-outline-secondary" id='tag-save' type="button" id="button-note">Add Note</button>
+    </div>
   </div>
 
   <div id='act-info'>

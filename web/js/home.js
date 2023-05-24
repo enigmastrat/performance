@@ -43,7 +43,7 @@ function listActs(acts) {
   for (i in acts) {
     act = acts[i];
     $a = $("<a href='/act.html?id="+act.id+"'>"+act.name+"</a>");
-    $delete = $("<a href='#'>X</a>");
+    $delete = $("<a href='#' class='delete-act'>X</a>");
     $delete.click(confirmDeleteAct(act));
     $menuActs.append($a);
     $menuActs.append($delete);
