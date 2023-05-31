@@ -27,8 +27,11 @@ const actId = urlParams.get('id')
 function init() {
   $("#tag-save").click(saveTag);
   $("#audio-waveform").click(setAudioPosition);
+  $("#audio-waveform").mousemove(resizeSelectionDragActive);
   $("#file-upload-button").click(uploadFile);
   $("#act-name").blur(updateActName);
+  $(".perf-handle").mousedown(startResizeSelection);
+  $(".perf-handle").mouseup(endResizeSelection);
 
   //showNotes();
   window.setInterval(updateAct,50);
@@ -46,6 +49,57 @@ function init() {
 function getActs() {
   // TODO get the acts
 }
+
+let resizeSideSelection = false;
+
+function startResizeSelection(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  $target = $(event.target);
+
+  let left = event.pageX;
+  resizeSideSelection = ($target.hasClass("perf-handle-left")) ? "left" : "right";
+}
+
+function endResizeSelection(event) {
+  resizeSideSelection = false;
+
+  // TODO send update, then show
+  showNotes();
+  saveSelectedNote();
+}
+
+function saveSelectedNote() {
+  $.ajax({
+    method: "POST",
+    url: "/acts/"+actId+"/notes/"+selectedNote.id,
+    data: JSON.stringify(selectedNote),
+    dataType: "json",
+    contentType: "application/json",
+    success: showNotes
+  });
+}
+
+function resizeSelectionDragActive() {
+  if(!resizeSideSelection) {
+    return;
+  }
+  $target = $(event.target);
+
+  let left = event.pageX;
+  let width = $("#audio-waveform").width();
+  let theClass = ".perf-handle-" + resizeSideSelection;
+  let duration = document.getElementById("audio-player").duration;
+  let dragTime = left/width*duration;
+  if(resizeSideSelection == "left") {
+    selectedNote.startTime = dragTime;
+  } else {
+    selectedNote.endTime = dragTime;
+  }
+
+  highlightSelection();
+}
+
 
 function getAct() {
   $.get({
@@ -136,7 +190,9 @@ function showNotes() {
       return function(event) {event.stopPropagation();deleteNote(note);};
     })(entry));
 
-    $repeat = $("<button class='btn btn-secondary'>&#x1d106; Repeat &#x1d107;</button>");
+    let repeatClass = (selectedNote && selectedNote.id == entry.id && isRepeating) ? "btn-warning" : "btn-secondary";
+
+    $repeat = $("<button class='btn "+repeatClass+" repeat-button'>&#x1d106; Repeat &#x1d107;</button>");
     $repeat.click(repeatClickClosure(entry));
 
     $btnGroup = $("<div class='btn-group' role='group'>");
@@ -148,28 +204,27 @@ function showNotes() {
   }
 }
 
+let isRepeating = false;
+
 function clearRepeat() {
-  $(".repeat-active").removeClass("repeat-active").removeClass("btn-warning").addClass("btn-secondary");
-  window.clearInterval(repeatId);
-  currentRepeatSectionId = undefined;
+  isRepeating = false;
 }
 
 function repeatClickClosure(note) {
   return function(event) {
-    tmpRepeatSectionId = currentRepeatSectionId;
-    clearRepeat();
-    if (tmpRepeatSectionId == note.id) {
-      event.stopPropagation();
+    $(".repeat-button").removeClass("btn-warning").addClass("btn-secondary");
+    event.stopPropagation();
+    if (isRepeating) {
+      if (selectedNote.id == note.id) {
+        clearRepeat();
+      } else {
+        selectNote(note.id);
+        $("#note-"+note.id+" .repeat-button").addClass("btn-warning");
+      }
     } else {
-      event.stopPropagation();
-      // Kind of a hack. If it isn't already playing, this is going to still "repeat".
-      // TODO need a better repeat mechanism that only fires when playing.
-      document.getElementById("audio-player").play();
-      let length = Math.round((note.endTime - note.startTime)*1000);
-      currentRepeatSectionId = note.id;
-      repeatId = window.setInterval(function(){moveAudioLocation(note.startTime)}, length);
-      $(event.target).addClass("repeat-active").addClass("btn-warning").removeClass("btn-secondary");
-      moveAudioLocation(note.startTime);
+      selectNote(note.id);
+      isRepeating = true;
+      $("#note-"+note.id+" .repeat-button").addClass("btn-warning");
     }
   };
 }
@@ -179,7 +234,11 @@ let selectedNote = undefined;
 function handleNoteClick(event) {
   let target = event.target;
   let $target = $(target);
-  let entry = data.filter(function (item){return item.id == $target.attr("note-id")})[0];
+  selectNote($target.attr("note-id"));
+}
+
+function selectNote(noteId) {
+  let entry = data.filter(function (item){return item.id == noteId})[0];
   selectedNote = entry;
   moveAudioLocation(entry.startTime);
   highlightSelection();
@@ -264,10 +323,30 @@ function updateAudioLocation() {
   let position = width*percent;
   position = (Math.round(position*10)/10)-3.5;
   $("#audio-position-line").css("left", position+"px");
+
+  setRepeatState();
+
   window.requestAnimationFrame(updateAudioLocation);
 }
 
+function setRepeatState() {
+  if(isRepeating && selectedNote) {
+    let audioPlayer = document.getElementById("audio-player");
+    let currentTime = audioPlayer.currentTime;
+    if (currentTime < selectedNote.startTime || currentTime > selectedNote.endTime) {
+      moveAudioLocation(selectedNote.startTime);
+    }
+  }
+}
+
 function setAudioPosition(event) {
+  // If we are resizing, don't click the waveform
+  if (resizeSideSelection) {
+    // TODO why are we landing here instead of mouse up for resize
+    endResizeSelection();
+    return;
+  }
+
   let xPosition = event.pageX;
   let width = $("#audio-waveform").width();
   let percent = xPosition/width;
@@ -276,7 +355,6 @@ function setAudioPosition(event) {
 
   moveAudioLocation(position);
 }
-
 
 function uploadFile(event) {
   event.preventDefault();
