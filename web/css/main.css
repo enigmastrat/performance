@@ -28,11 +28,11 @@
 }
 #audio-position-line {
   position: absolute;
-  width: 7px;
+  width: 2px;
   height: 100%;
-  background: rgba(0,0,0,1);
-  border-left: 3px solid rgba(200,200,200,1);
-  border-right: 3px solid rgba(200,200,200,1);
+  background: rgba(0,0,0,0);
+  /*border-left: 3px solid rgba(200,200,200,0);*/
+  border-right: 2px solid rgba(0,0,0,.75);
   top: 0px;
   z-index:10;
   opacity: .4;
