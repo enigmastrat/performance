@@ -32,6 +32,7 @@ function init() {
   $("#act-name").blur(updateActName);
   $(".perf-handle").mousedown(startResizeSelection);
   $(".perf-handle").mouseup(endResizeSelection);
+  $("#play-pause-button").click(togglePlayPause);
 
   //showNotes();
   window.setInterval(updateAct,50);
@@ -199,10 +200,39 @@ function showNotes() {
     $btnGroup.append($delete);
     $btnGroup.append($repeat);
 
+    $noteEntry.hover(hoverHighlight(entry), unhoverHighlight(entry));
+
     $("#act-info").append($noteEntry);
     $noteEntry.prepend($btnGroup);
   }
 }
+
+function hoverHighlight(entry) {
+  return function() {
+    $newHighlight = $("#audio-highlight").clone();
+
+    let duration = document.getElementById("audio-player").duration;
+    let left = entry.startTime/duration*100;
+    let blockDuration = (entry.endTime-entry.startTime)/duration*100;
+
+    $newHighlight.css("left",left+"%");
+    $newHighlight.css("width",blockDuration+"%");
+    $newHighlight.removeClass("template");
+    $newHighlight.addClass("highlight-"+entry.id);
+    $("#audio-waveform").append($newHighlight);
+  }
+}
+
+function highlightNoteSection(entry) {
+
+}
+
+function unhoverHighlight(entry) {
+  return function(event){
+    $(".highlight-"+entry.id).remove();
+  }
+}
+
 
 let isRepeating = false;
 
@@ -327,6 +357,24 @@ function updateAudioLocation() {
   setRepeatState();
 
   window.requestAnimationFrame(updateAudioLocation);
+
+  updatePlayPauseButton();
+}
+
+function updatePlayPauseButton() {
+  let paused = document.getElementById("audio-player").paused;
+  let btnClass = paused ? "play-button" : "pause-button";
+  $("#play-pause-button").removeClass("play-button").removeClass("pause-button").addClass(btnClass);
+}
+
+function togglePlayPause() {
+  let player = document.getElementById("audio-player")
+  let paused = player.paused;
+  if (paused) {
+    player.play();
+  } else {
+    player.pause();
+  }
 }
 
 function setRepeatState() {
