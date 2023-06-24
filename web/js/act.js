@@ -209,28 +209,38 @@ function showNotes() {
 
 function hoverHighlight(entry) {
   return function() {
-    $newHighlight = $("#audio-highlight").clone();
-
-    let duration = document.getElementById("audio-player").duration;
-    let left = entry.startTime/duration*100;
-    let blockDuration = (entry.endTime-entry.startTime)/duration*100;
-
-    $newHighlight.css("left",left+"%");
-    $newHighlight.css("width",blockDuration+"%");
-    $newHighlight.removeClass("template");
-    $newHighlight.addClass("highlight-"+entry.id);
-    $("#audio-waveform").append($newHighlight);
+    highlightWaveformSection(entry, true);
   }
-}
-
-function highlightNoteSection(entry) {
-
 }
 
 function unhoverHighlight(entry) {
   return function(event){
-    $(".highlight-"+entry.id).remove();
+    unhighlightWaveformSection(entry);
   }
+}
+
+function highlightWaveformSection(entry, isHovered) {
+  $newHighlight = $("#audio-highlight").clone();
+
+  let duration = document.getElementById("audio-player").duration;
+  let left = entry.startTime/duration*100;
+  let blockDuration = (entry.endTime-entry.startTime)/duration*100;
+
+  $newHighlight.css("left",left+"%");
+  $newHighlight.css("width",blockDuration+"%");
+  $newHighlight.removeClass("template");
+  $newHighlight.addClass("temporary-waveform-selection");
+
+  if(isHovered) {
+    $newHighlight.addClass("manual-hover-waveform-selection");
+  }
+
+  $newHighlight.addClass("highlight-"+entry.id);
+  $("#audio-waveform").append($newHighlight);
+}
+
+function unhighlightWaveformSection(entry) {
+  $(".highlight-"+entry.id).remove();
 }
 
 
@@ -311,9 +321,13 @@ function updateAct() {
   entries = entries.sort(function(a,b){return a.startTime-b.startTime});
 
   $(".note").removeClass(highlightClass);
+  // TODO this may cause flickering
+  $(".temporary-waveform-selection:not(.manual-hover-waveform-selection)").remove();
+
   entries.forEach(function(note){
     $note = $("#note-"+note.id);
     $note.addClass(highlightClass);
+    highlightWaveformSection(note, false);
   });
 
 }
