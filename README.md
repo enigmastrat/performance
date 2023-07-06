@@ -11,4 +11,4 @@ dance routines, I found that it is fairly useful for taking and sharing notes in
 # MVP goal
 A web-based musical annotation tool that allows users to upload music, visualize the waveform, add annotations at different locations in a song, and share the work with others.
 
-![Performance App Screenshot](https://github.com/enigmastrat/performance/blob/main/PerformanceScreenshot.jpg?raw=true)
+![Performance App Screenshot](https://github.com/enigmastrat/performance/blob/main/PerformanceScreenshot.png?raw=true)
