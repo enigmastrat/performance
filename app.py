@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import hashlib
@@ -122,6 +123,14 @@ def update_group(id):
 
     return json.dumps(groups)
 
+act_template = {
+  "name": "Untitled",
+  "file": "",
+  "waveform": "",
+  "owner_id": "",
+  "participants": {}
+}
+
 
 @app.route("/acts", methods=["GET"])
 def get_acts():
@@ -130,7 +139,7 @@ def get_acts():
 
     user_id = session["user_id"]
 
-    return json.dumps(list(filter(lambda x: x["owner_id"] == user_id, acts)))
+    return json.dumps(act_db.getBy({"owner_id": user_id}))
 @app.route("/acts", methods=["POST"])
 def add_acts():
     if not is_logged_in():
@@ -139,37 +148,43 @@ def add_acts():
     user_id = session["user_id"]
 
     act = request.json
+    new_act = copy.deepcopy(act_template)
+    new_act.update(act)
+    new_act["owner_id"] = user_id
 
-    # TODO use base object update with stuff here to match schema
+    new_act["id"] = act_db.add(new_act)
 
-    act["owner_id"] = user_id
-
-    act["id"] = act_db.add(act)
-
-    acts.append(act)
-
-    return json.dumps(act)
+    return json.dumps(new_act)
 @app.route("/acts/<id>", methods=["GET"])
 def get_act(id):
-    act = list(filter(lambda x: x["id"] == id, acts))[0]
+    #act = list(filter(lambda x: x["id"] == id, acts))[0]
+    act = act_db.find(id)
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["PUT","POST"])
 def update_act(id):
-    old_act = list(filter(lambda x: x["id"] == id, acts))[0]
+    old_act = act_db.find(id)
+    if session["user_id"] != old_act["owner_id"]:
+        return 403, "wut?"
+
     new_act = request.json
 
     # Don't let the user change the id
     new_act["id"] = id
 
-    # Update the dancer
-    old_act.update(new_act)
+    # Update the act
+    act_db.update(old_act, new_act)
 
-    return json.dumps(acts)
+    return json.dumps(new_act)
 @app.route("/acts/<id>", methods=["DELETE"])
 def delete_act(id):
-    act = list(filter(lambda x: x["id"] == id, acts))[0]
-    acts.remove(act)
+    act = act_db.find(id)
+    if session["user_id"] != act["owner_id"]:
+        return 403, "I can't let you do that, Dave"
+
+    act_db.deleteById(id)
+
     #TODO delete everything associated with the act (Notes and files)
+
     return json.dumps(act)
 # Notes
 @app.route("/acts/<id>/notes", methods=["GET"])
