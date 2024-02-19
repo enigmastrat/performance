@@ -139,14 +139,18 @@ def add_acts():
     user_id = session["user_id"]
 
     act = request.json
-    act["id"] = str(uuid.uuid4())
+
+    # TODO use base object update with stuff here to match schema
+
     act["owner_id"] = user_id
+
+    act["id"] = act_db.add(act)
+
     acts.append(act)
 
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["GET"])
 def get_act(id):
-    breakpoint()
     act = list(filter(lambda x: x["id"] == id, acts))[0]
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["PUT","POST"])
