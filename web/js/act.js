@@ -365,7 +365,7 @@ function updateAudioLocation() {
   let percent = currentTime/duration;
   let width = $("#audio-waveform").width();
   let position = width*percent;
-  position = (Math.round(position*10)/10)-2;
+  position = (Math.round(position*10)/10)+($("#audio-position-line").width()/2);
   $("#audio-position-line").css("left", position+"px");
 
   setRepeatState();

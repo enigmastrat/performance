@@ -8,6 +8,8 @@ from werkzeug.utils import secure_filename
 
 from audio_waveform import generate_waveform
 
+from pysondb import db
+
 UPLOAD_FOLDER = os.path.join('web','songs')
 UPLOAD_FOLDER_RELATIVE = 'songs'
 ALLOWED_EXTENSIONS = {'mp3'}
@@ -17,52 +19,28 @@ app = Flask(__name__,
 app.secret_key = "This is a super secret random secret key"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-dancers = [
-    {"id": 0, "name": "Charlotte"},
-    {"id": 1, "name": "Chloe"}
-]
+dancer_db = db.getDb("data/dancers.json")
+group_db = db.getDb("data/groups.json")
+act_db = db.getDb("data/acts.json")
+note_db = db.getDb("data/notes.json")
+organization_db = db.getDb("data/organizations.json")
+user_db = db.getDb("data/users.json")
 
-groups = [
-    {"id":0, "name": "Ovation", "members": [0]},
-    {"id":1, "name": "Encore", "members": [1]},
-]
 
-act_0_id = str(uuid.uuid4())
-act_1_id = str(uuid.uuid4())
-act_2_id = str(uuid.uuid4())
+dancers = dancer_db.getAll()
 
-acts = [
-    {"id": act_0_id, "name": "Like a Prayer", "owner_id": 1, "participants": {"groups":[1], "individuals":[0]}},
-    {"id": act_1_id, "name": "Steppin Time", "owner_id": 0, "participants": {"groups":[0], "individuals":[]}},
-    {"id": act_2_id, "name": "Holy Sound", "file": "HolySound.mp3", "waveform": "HolySound.png", "owner_id": 0, "participants": {}},
-]
+groups = group_db.getAll()
 
-notes = [
-    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 0, "endTime": 10, "note": "Song starts"},
-    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 4, "endTime": 10, "note": "Guitar and Drums Start playing"},
-    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 7, "endTime": 15, "note": "Lead line"},
-    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 13, "endTime": 21, "note": "Lead line #2"},
-    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 18.2, "endTime": 25, "note": "Lead line #3"},
-    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 26, "endTime": 35, "note": "Verse 1"},
-    {"id":str(uuid.uuid4()), "act_id": act_2_id, "startTime": 72, "endTime": 82, "note": "Verse 2"},
-]
+acts = act_db.getAll()
+
+notes = note_db.getAll()
 
 organization = {
     "name": "Bravo",
     "members": dancers,
 }
 
-users = [
-    {
-        "id": 0,
-        "email": "test@test.test",
-        "password": "secret"
-    },{
-        "id": 1,
-        "email": "a",
-        "password": "a"
-    },
-]
+users = user_db.getAll()
 
 # TODO make this stronger
 def is_logged_in():
@@ -168,6 +146,7 @@ def add_acts():
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["GET"])
 def get_act(id):
+    breakpoint()
     act = list(filter(lambda x: x["id"] == id, acts))[0]
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["PUT","POST"])
