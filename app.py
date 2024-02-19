@@ -189,23 +189,36 @@ def delete_act(id):
 # Notes
 @app.route("/acts/<id>/notes", methods=["GET"])
 def get_notes(id):
-    filtered_notes = list(filter(lambda x: x["act_id"] == id, notes))
+    query = {
+        "act_id": id
+    }
+    filtered_notes = note_db.getByQuery(query)
+
     return json.dumps(filtered_notes)
 @app.route("/acts/<act_id>/notes", methods=["POST"])
 def add_note(act_id):
-    note = request.json
-    note["id"] = str(uuid.uuid4())
-    note["act_id"] = act_id
-    notes.append(note)
+    # TODO prevent non owner from adding notes
 
-    return json.dumps(acts)
+    note = request.json
+    note["act_id"] = act_id
+    note["id"] = note_db.add(note)
+
+    return json.dumps(note)
 @app.route("/acts/<act_id>/notes/<id>", methods=["GET"])
 def get_note(act_id, id):
-    note = list(filter(lambda x: x["id"] == id and x["act_id"] == act_id, notes))[0]
-    return json.dumps(note)
+    return json.dumps(_get_note(act_id, id))
+def _get_note(act_id, id):
+    query = {
+        "act_id": act_id,
+        "id": id
+    }
+    # TODO is this query necessary? Maybe for security?
+    note = note_db.getBy(query)[0]
+    return note
+
 @app.route("/acts/<act_id>/notes/<id>", methods=["PUT","POST"])
 def update_note(act_id, id):
-    old_note = list(filter(lambda x: x["id"] == id and x["act_id"] == act_id, notes))[0]
+    old_note = _get_note(act_id, id)
     new_note = request.json
 
     # Don't let the user change the id
@@ -213,14 +226,14 @@ def update_note(act_id, id):
     new_note["act_id"] = act_id
 
     # Update the item
-    old_note.update(new_note)
+    note_db.update(old_note, new_note)
 
-    return json.dumps(notes)
+    return new_note
 @app.route("/acts/<act_id>/notes/<id>", methods=["DELETE"])
 def delete_note(act_id, id):
-    note = list(filter(lambda x: x["id"] == id and x["act_id"] == act_id, notes))[0]
+    note = _get_note(act_id, id)
 
-    notes.remove(note)
+    note_db.deleteById(id)
 
     return json.dumps(note)
 
