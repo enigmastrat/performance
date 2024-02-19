@@ -54,13 +54,35 @@ def login():
     password = user["password"]
     email = user["email"]
 
-    filtered_users = list(filter(lambda x: x["email"] == email and x["password"] == password, users))
+    # TODO use more secure password mechanism
+    query = {
+        "email": email,
+        "password": password
+    }
+
+    filtered_users = user_db.getByQuery(query)
     if (len(filtered_users) > 0):
         # TODO not sure if flask sessions are secure
-        session["user_id"] = list(filtered_users)[0]["id"]
-        session["user_email"] = email
+        _login(filtered_users[0])
         return ("Success", 200)
     return ("Login denied", 403)
+
+def _login(user):
+    session["user_id"] = user["id"]
+    session["user_email"] = user["email"]
+
+@app.route("/create-user", methods=["POST"])
+def create_user():
+    user = request.json
+
+    # TODO add some verification here
+
+    user_id = user_db.add(user)
+    user["id"] = user_id
+    _login(user)
+
+    return ("Success", 200)
+
 
 @app.route("/organization", methods=["GET"])
 def get_organization():
