@@ -180,7 +180,7 @@ def add_acts():
 @app.route("/acts/<id>", methods=["GET"])
 def get_act(id):
     #act = list(filter(lambda x: x["id"] == id, acts))[0]
-    act = act_db.find(id)
+    act = act_db.getById(id)
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["PUT","POST"])
 def update_act(id):
@@ -199,7 +199,7 @@ def update_act(id):
     return json.dumps(new_act)
 @app.route("/acts/<id>", methods=["DELETE"])
 def delete_act(id):
-    act = act_db.find(id)
+    act = act_db.getById(id)
     if session["user_id"] != act["owner_id"]:
         return 403, "I can't let you do that, Dave"
 
