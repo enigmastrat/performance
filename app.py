@@ -162,7 +162,7 @@ def get_act(id):
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["PUT","POST"])
 def update_act(id):
-    old_act = act_db.find(id)
+    old_act = act_db.getById(id)
     if session["user_id"] != old_act["owner_id"]:
         return 403, "wut?"
 
@@ -198,6 +198,7 @@ def get_notes(id):
 @app.route("/acts/<act_id>/notes", methods=["POST"])
 def add_note(act_id):
     # TODO prevent non owner from adding notes
+    # TODO use note template, like act
 
     note = request.json
     note["act_id"] = act_id
@@ -243,7 +244,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 @app.route("/acts/<id>/file", methods=["POST"])
 def upload_audio_file(id):
-    act = list(filter(lambda x: x["id"] == id, acts))[0]
+    act = act_db.getById(id)
     file = request.files['file']
     if file and allowed_file(file.filename):
         print(file.filename)
@@ -262,13 +263,16 @@ def upload_audio_file(id):
         act["file"] = os.path.join(UPLOAD_FOLDER_RELATIVE, filename)
         act["waveform"] = os.path.join(UPLOAD_FOLDER_RELATIVE, waveform_img_filename)
 
+        # TODO make sure this works
+        act_db.updateById(id, act)
+
     return json.dumps(act)
 
 
 @app.route("/")
 def root():
     if is_logged_in():
-        return app.send_static_file("index.html")
+        return app.send_static_file("home.html")
     else:
         return app.send_static_file("login.html")
 
