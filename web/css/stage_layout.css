@@ -1,0 +1,11 @@
+#stage-canvas {
+    border: 1px #999 solid;
+}
+
+.element-insert-mode {
+    background-color: #FA0;
+}
+
+.stage-canvas-hover {
+    cursor: pointer;
+}

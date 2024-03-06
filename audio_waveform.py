@@ -7,10 +7,11 @@ except ModuleNotFoundError:
 
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def generate_waveform(file_path, output_file_name="testplot.png"):
-    if librosa is None:
+    if librosa is None or os.environ.get("WAVEFORM_DISABLED", False):
         return
 
     file = librosa.load(file_path, sr=750)
