@@ -7,6 +7,7 @@ let elementInsertMode = false;
 let elementDragMode = false;
 
 let stageElements = [];
+let keyframes = [];
 
 let selectedElement = undefined;
 
@@ -97,9 +98,26 @@ function handleStageCanvasMouseDown() {
     selectedElement = hoveredEls[0];
 }
 
-function handleStageCanvasMouseUp() {
+function handleStageCanvasMouseUp(event) {
+
+    if(selectedElement) {
+        keyframes.push(createKeyframe(selectedElement,event.offsetX, event.offsetY));
+
+    }
     elementDragMode = false;
     selectedElement = undefined;
+}
+
+function createKeyframe(element,x,y) {
+    let timestamp = document.getElementById("audio-player").currentTime;
+
+    return {
+        "timestamp": timestamp,
+        "x": x,
+        "y": y,
+        "elementId": element.id
+    };
+
 }
 
 function createStageElement(x,y,hover,color) {
@@ -107,6 +125,10 @@ function createStageElement(x,y,hover,color) {
     el["color"] = color || "#FA0";
     el["radius"] = 20;
     el["hover"] = hover;
+    el["id"] = "el-"+(new Date()).getTime();
+
+    keyframes.push(createKeyframe(el,x,y));
+
     return el;
 }
 
@@ -121,19 +143,72 @@ function addStageElement(el) {
     stageElements.push(el);
 }
 
-function drawStageElement(el) {
+
+function drawStageElement(el,timestamp) {
+
+    let x = el.x;
+    let y = el.y;
+
     ctx.fillStyle = el.color;
     ctx.beginPath();
-    ctx.arc(el.x, el.y, el.radius, 0, Math.PI * 2, true);
+    ctx.arc(x, y, el.radius, 0, Math.PI * 2, true);
     ctx.fill();
+
+}
+
+function calculateStageElemenLocation(el,timestamp) {
+    if (elementDragMode && el == selectedElement) {
+        return;
+    }
+
+    elKeyframes = keyframes.filter(function(k){
+        return k.elementId == el.id;
+    });
+    elKeyframes = elKeyframes.sort(function(a,b){
+        return a.timestamp - b.timestamp;
+    });
+    keyframeSet = [];
+    for (i in elKeyframes) {
+        k = elKeyframes[i];
+        if (k.timestamp > timestamp) {
+            keyframeSet.push(elKeyframes[i-1]);
+            keyframeSet.push(k);
+            break; // Leave the for loop
+        }
+    }
+
+    let x = el.x;
+    let y = el.y;
+
+    if (keyframeSet.length == 0 || !keyframeSet[0]) {
+        k = elKeyframes.filter(function(k1){return k1.timestamp<=timestamp}).pop() || elKeyframes[0];
+        x = k.x;
+        y = k.y;
+    } else if (keyframeSet.length == 1 ) {
+        x = keyframeSet[0].x;
+        y = keyframeSet[0].y;
+    } else if (keyframeSet.length == 2 ) {
+        ts0 = keyframeSet[0].timestamp;
+        ts1 = keyframeSet[1].timestamp;
+        percentBetweenTimestamps = (timestamp-ts0)/(ts1-ts0);
+        x = keyframeSet[0].x + percentBetweenTimestamps*(keyframeSet[1].x-keyframeSet[0].x);
+        y = keyframeSet[0].y + percentBetweenTimestamps*(keyframeSet[1].y-keyframeSet[0].y);
+    }
+
+    el.x = x;
+    el.y = y;
+    //console.log(x);
 }
 
 function drawStageCanvas() {
+    let timestamp = document.getElementById("audio-player").currentTime;
+
     clearCanvas(stageCanvas);
 
     for (i in stageElements) {
         let el = stageElements[i];
-        drawStageElement(el);
+        calculateStageElemenLocation(el,timestamp)
+        drawStageElement(el,timestamp);
     }
 
     window.requestAnimationFrame(drawStageCanvas);

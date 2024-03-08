@@ -33,6 +33,8 @@ function init() {
   $(".perf-handle").mousedown(startResizeSelection);
   $(".perf-handle").mouseup(endResizeSelection);
   $("#play-pause-button").click(togglePlayPause);
+  $(window).keypress(handleKeypress);
+  $("#tag-note").keypress(stopPropagation);
 
   //showNotes();
   window.setInterval(updateAct,50);
@@ -49,6 +51,16 @@ function init() {
 
 function getActs() {
   // TODO get the acts
+}
+
+function stopPropagation(event) {
+  event.stopPropagation();
+}
+
+function handleKeypress(event) {
+  if(event.keyCode == 32) {
+    togglePlayPause();
+  }
 }
 
 let resizeSideSelection = false;

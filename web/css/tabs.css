@@ -1,0 +1,22 @@
+.tab-link {
+    cursor: pointer;
+    border: 1px #555 solid;
+    background-color: #FFF;
+    padding-left: 1em;
+    padding-right: 1em;
+    margin: 0px;
+    display: inline;
+
+}
+
+.tab-link.selected {
+    background-color: #EFC;
+}
+
+.tab {
+    display: none;
+}
+
+.tab-selected {
+    display: block;
+}

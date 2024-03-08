@@ -5,6 +5,7 @@
   <title>Performance</title>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/stage_layout.css">
+  <link rel="stylesheet" href="css/tabs.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link href="css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
   <script src="js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
@@ -12,6 +13,7 @@
   <script language='javascript' src='js/home.js'></script>
   <script language='javascript' src='js/act.js'></script>
   <script language='javascript' src='js/stage_layout.js'></script>
+  <script language='javascript' src='js/tabs.js'></script>
 
 
   <style>
@@ -91,20 +93,29 @@
     <div id="audio-highlight" class="template audio-highlight"></div>
   </div>
 
-  <div id='tag-box'>
-    <div class="input-group mb-3">
-      <button class="btn"><span id="play-pause-button" class="material-symbols-outlined play-button"></span></button>
-      <input type="text" class="form-control" id='tag-note' placeholder="Type a Note" aria-describedby="button-note">
-      <button class="btn btn-outline-secondary" id='tag-save' type="button" id="button-note">Add Note</button>
+  <div id="tab-links">
+    <button class="btn"><span id="play-pause-button" class="material-symbols-outlined play-button"></span></button>
+    <span class="tab-link selected" id="tab-link-notes" rel="tab-notes">Notes</span>
+    <span class="tab-link" id="tab-link-stage-layout" rel="tab-stage-layout">Stage Layout</span>
+  </div>
+
+  <div class='tab tab-selected' id='tab-notes'>
+    <div id='tag-box'>
+      <div class="input-group mb-3">
+        <input type="text" class="form-control" id='tag-note' placeholder="Type a Note" aria-describedby="button-note">
+        <button class="btn btn-outline-secondary" id='tag-save' type="button" id="button-note">Add Note</button>
+      </div>
+    </div>
+
+    <div id='act-info'>
     </div>
   </div>
 
-  <div id='act-info'>
-  </div>
-
-  <div id='stage-layout'>
-    <button class='btn' type="button" id="add-stage-element">Add Element</button>
-    <canvas id='stage-canvas'></canvas>
+  <div class='tab' id="tab-stage-layout">
+    <div id='stage-layout'>
+      <button class='btn' type="button" id="add-stage-element">Add Element</button>
+      <canvas id='stage-canvas'></canvas>
+    </div>
   </div>
 </body>
 </html>
