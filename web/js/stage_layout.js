@@ -16,6 +16,8 @@ let elementStandard = "#AAA";
 
 function initStageLayout() {
     stageCanvas = document.getElementById("stage-canvas");
+    $(window).mousemove(keyframeMarkerMouseMove);
+
     initCanvas(stageCanvas);
 
     $("#add-stage-element").click(toggleElementInsertMode);
@@ -101,23 +103,40 @@ function handleStageCanvasMouseDown() {
 function handleStageCanvasMouseUp(event) {
 
     if(selectedElement) {
-        keyframes.push(createKeyframe(selectedElement,event.offsetX, event.offsetY));
-
+        createKeyframe(selectedElement,event.offsetX, event.offsetY);
     }
     elementDragMode = false;
     selectedElement = undefined;
 }
 
-function createKeyframe(element,x,y) {
-    let timestamp = document.getElementById("audio-player").currentTime;
+function createKeyframe(element,x,y,timestamp) {
+    if (timestamp == undefined) {
+        timestamp = document.getElementById("audio-player").currentTime;
+    }
 
+    candidateKeyframes = keyframes.filter(function(k){
+        return element.id == k.elementId && timestamp == k.timestamp;
+    });
+
+    if (candidateKeyframes.length > 0) {
+        k = candidateKeyframes[0];
+        k["x"] = x;
+        k["y"] = y;
+    } else {
+        keyframes.push(getKeyframe(element,x,y, timestamp));
+    }
+
+    drawKeyframeMarkers();
+}
+
+function getKeyframe(element,x,y, timestamp) { 
     return {
         "timestamp": timestamp,
         "x": x,
         "y": y,
-        "elementId": element.id
-    };
-
+        "elementId": element.id,
+        "keyframeId": "key-"+(new Date()).getTime()
+    }
 }
 
 function createStageElement(x,y,hover,color) {
@@ -127,9 +146,75 @@ function createStageElement(x,y,hover,color) {
     el["hover"] = hover;
     el["id"] = "el-"+(new Date()).getTime();
 
-    keyframes.push(createKeyframe(el,x,y));
+    createKeyframe(el,x,y);
 
     return el;
+}
+
+function drawKeyframeMarkers() {
+
+    $(".keyframe-marker").remove();
+    let duration = document.getElementById("audio-player").duration;
+    let width = $("#audio-waveform").width();
+    
+    // TODO create marker icons in waveform timeline
+    keyframeSubset = keyframes; // TODO actually have a subset
+    for (i in keyframeSubset) {
+        let k = keyframeSubset[i];
+        let percent = k.timestamp/duration;
+        let position = width*percent;
+        position = (Math.round(position*10)/10);
+    
+
+        $marker = $("<span>");
+        $marker.attr("element-id",k["elementId"]);
+        $marker.attr("keyframe-id",k["keyframeId"]);
+        $marker.css("left", position+"px");
+        $marker.addClass("keyframe-marker");
+        $marker.click(keyframeClickClosure(k));
+        $marker.mousedown(keyframeMarkerMouseDown);
+        $marker.mouseup(keyframeMarkerMouseUp);
+
+        $("#keyframe-markers").append($marker);
+    }
+}
+
+var isDragging = false;
+var draggedKeyframe = undefined;
+
+
+function keyframeMarkerMouseDown(event) {
+    isDragging = true;
+    draggedKeyframe = $(event.target);
+    $(".keyframe-marker").removeClass("selected");
+    draggedKeyframe.addClass("selected");
+}
+function keyframeMarkerMouseMove(event) {
+    if (isDragging) {
+        let x = event.pageX;
+        draggedKeyframe.css("left",x+"px");
+        k = keyframes.filter(function(t){
+            return draggedKeyframe.attr("keyframe-id") == t.keyframeId;
+        })[0];
+        k.timestamp = getAudioLocationByX(x);
+    }
+}
+var wasDragging = false;
+function keyframeMarkerMouseUp(event) {
+    wasDragging = isDragging;
+    isDragging = false;
+    if (!wasDragging) {
+        event.stopPropagation();
+    }
+}
+
+function keyframeClickClosure(k) {
+    return function(event){
+        console.log(wasDragging);
+        event.stopPropagation();
+        moveAudioLocation(k.timestamp);
+        wasDragging = false;
+    }
 }
 
 function toggleElementInsertMode() {

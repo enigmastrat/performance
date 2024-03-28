@@ -9,3 +9,23 @@
 .stage-canvas-hover {
     cursor: pointer;
 }
+
+#keyframe-markers {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+.keyframe-marker {
+    cursor: pointer;
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    border-left: 1px #555 solid;
+    background-color: #0AF;
+    z-index: 5;
+}
+
+.keyframe-marker.selected {
+    background-color: #FA0;
+}

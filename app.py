@@ -262,8 +262,13 @@ def delete_note(act_id, id):
 
 
 def allowed_file(filename):
+    # TODO Before approving, check:
+    #      the file wrapper
+    #      file signature against black list?
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route("/acts/<id>/file", methods=["POST"])
 def upload_audio_file(id):
     act = act_db.getById(id)

@@ -60,6 +60,9 @@ function stopPropagation(event) {
 function handleKeypress(event) {
   if(event.keyCode == 32) {
     togglePlayPause();
+    event.preventDefault();
+    event.stopPropagation();
+
   }
 }
 
@@ -368,6 +371,14 @@ function saveTag() {
   });
 
   //showNotes();
+}
+
+function getAudioLocationByX(x) {
+  let duration = document.getElementById("audio-player").duration;
+  let width = $("#audio-waveform").width();
+  let percent = x/width;
+
+  return duration*percent;
 }
 
 
