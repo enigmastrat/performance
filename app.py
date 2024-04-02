@@ -179,14 +179,13 @@ def add_acts():
     return json.dumps(new_act)
 @app.route("/acts/<id>", methods=["GET"])
 def get_act(id):
-    #act = list(filter(lambda x: x["id"] == id, acts))[0]
     act = act_db.getById(id)
     return json.dumps(act)
 @app.route("/acts/<id>", methods=["PUT","POST"])
 def update_act(id):
     old_act = act_db.getById(id)
     if session["user_id"] != old_act["owner_id"]:
-        return 403, "wut?"
+        return ("This is not yours to change", 403)
 
     new_act = request.json
 

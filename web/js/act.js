@@ -33,8 +33,8 @@ function init() {
   $(".perf-handle").mousedown(startResizeSelection);
   $(".perf-handle").mouseup(endResizeSelection);
   $("#play-pause-button").click(togglePlayPause);
-  $(window).keypress(handleKeypress);
   $("#tag-note").keypress(stopPropagation);
+  $(window.document).keypress(handleKeypress);
 
   //showNotes();
   window.setInterval(updateAct,50);
@@ -47,6 +47,12 @@ function init() {
   getActs();
   getAct();
   getNotes();
+}
+
+function handleKeypress(event) {
+    if(event.keyCode == 32) {
+        togglePlayPause();
+    }
 }
 
 function getActs() {
@@ -367,8 +373,8 @@ function saveTag() {
     data: JSON.stringify(noteData),
     dataType: "json",
     contentType: "application/json",
-    success: getNotes
-  });
+    success: function(){$("#tag-note").val("");}
+  }).done(getNotes);
 
   //showNotes();
 }
@@ -443,6 +449,9 @@ function setAudioPosition(event) {
 
 function uploadFile(event) {
   event.preventDefault();
+
+  $("#file-upload-status").text("uploading...");
+
   $.ajax({
     url: "/acts/"+actId+"/file",
     type: 'POST',
@@ -450,5 +459,7 @@ function uploadFile(event) {
     processData: false,
     contentType: false,                    // Using FormData, no need to process data.
     success: getAct
-  })
+  }).done(function(){
+    $("#file-upload-status").text("");
+  });
 }
